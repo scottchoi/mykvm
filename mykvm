@@ -155,7 +155,7 @@ class VirshCommand(object):
     def destroy(self):
         cmd = []
 
-        #cmd.append("sudo")
+        cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("destroy")
         cmd.append(self.vm.get_name())
@@ -165,7 +165,7 @@ class VirshCommand(object):
     def undefine(self):
         cmd = []
 
-        #cmd.append("sudo")
+        cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("undefine")
         cmd.append(self.vm.get_name())
@@ -177,6 +177,7 @@ class VirshStatusCommand(object):
     def list(self):
         cmd = []
 
+        cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("list")
         cmd.append("--all")
