@@ -222,8 +222,17 @@ class DnsmasqCommand(object):
     def restart(self):
         cmd = []
 
+        cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-destroy")
+        cmd.append("default")
+
+        subprocess.call(cmd)
+        
+        cmd = []
+        cmd.append("sudo")
+        cmd.append("virsh")
+        cmd.append("net-undefine")
         cmd.append("default")
 
         subprocess.call(cmd)
@@ -231,6 +240,7 @@ class DnsmasqCommand(object):
         self.generate_net_config()
 
         cmd = []
+        cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-define")
         cmd.append("--file")
@@ -239,8 +249,17 @@ class DnsmasqCommand(object):
         subprocess.call(cmd)
 
         cmd = []
+        cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-start")
+        cmd.append("default")
+
+        subprocess.call(cmd)
+        
+        cmd = []
+        cmd.append("sudo")
+        cmd.append("virsh")
+        cmd.append("net-autostart")
         cmd.append("default")
 
         subprocess.call(cmd)
