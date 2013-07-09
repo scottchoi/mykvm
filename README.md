@@ -8,9 +8,10 @@ Perpare a Base Image
 
 * install kvm and virt-install
 
-```
+<pre>
+$ sudo apt-get update
 $ sudo apt-get install kvm libvirt-bin virtinst
-```
+</pre>
 
 * create a qcow2 image file 
 
@@ -26,20 +27,42 @@ $ sudo virt-install --virt-type kvm --name precise-base --ram 1024 --cdrom ubunt
 
 * create a base directory and copy the base image
 
-```
+<pre>
 $ mkdir -p ~/.mykvm/base
 $ cp precise-base.qcow2 ~/.mykvm/base
+</pre>
+
+Configure Local DNS
+-------------------
+
+* add ip of virbr0 bridge as a nameserver
+
+<pre>
+$ sudo sh -c "echo 'nameserver 192.168.122.1' >> /etc/resolvconf/resolv.conf.d/head"
+$ sudo sh -c "echo 'nameserver 8.8.8.8' >> /etc/resolvconf/resolv.conf.d/head"
+</pre>
+
+* update resolv.conf
+
+```
+$ sudo resolvconf -u 
 ```
 
 Using mykvm
 ---------------
 
-* checkout mykvm
+* install git and python-yaml packages
 
 ```
-$ git clone git@github.com:scottchoi/mykvm.git
-$ cd mykvm  
+$ sudo apt-get install git python-yaml
 ```
+
+* checkout mykvm
+
+<pre>
+$ git clone https://github.com/scottchoi/mykvm.git
+$ cd mykvm  
+</pre>
 
 * copy the mykvm script to PATH dirctory or add mykvm directory to PATH
 
