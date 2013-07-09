@@ -127,6 +127,11 @@ class VirtInstallCommand(object):
         cmd.append("kvm")
         cmd.append("--name") 
         cmd.append(self.vm.get_name())
+        # nested kvm : 
+        # modprobe -r kvm-intel && modprobe kvm-intel nested=1 && cat /sys/module/kvm_intel/parameters/nested
+        # --cpu=host
+        cmd.append("--cpu")
+        cmd.append("core2duo,+vmx") 
         cmd.append("--ram")
         cmd.append(self.vm.get_ram())
         cmd.append("--disk")
