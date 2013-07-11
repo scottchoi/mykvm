@@ -139,8 +139,9 @@ class VirtInstallCommand(object):
         for network in self.vm.get_networks():
             cmd.append("--network")
             cmd.append("network=" + network.get_name())
-            cmd.append("--mac")
-            cmd.append(network.get_mac()) 
+            if network.get_mac():
+                cmd.append("--mac")
+                cmd.append(network.get_mac()) 
         cmd.append("--graphics")
         cmd.append("vnc,listen=0.0.0.0")
         cmd.append("--noautoconsole")

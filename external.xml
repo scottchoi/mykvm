@@ -1,0 +1,4 @@
+<network>
+  <name>external</name>
+  <bridge name='virbr2'/>
+</network>

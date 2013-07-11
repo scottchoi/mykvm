@@ -1,17 +1,37 @@
 ---
-- name: haproxy1
+- name: controller 
   vcpus: 1
-  ram: 1024
+  ram: 2048 
   template: precise-base.qcow2
   networks:
   - name: default
     ip: 192.168.122.11
+  - name: external
 
-- name: haproxy2
+- name: network 
   vcpus: 1
-  ram: 512
+  ram: 1024 
   template: precise-base.qcow2
   networks:
   - name: default
     ip: 192.168.122.12
+  - name: internal
+  - name: external 
 
+- name: compute1 
+  vcpus: 1
+  ram: 2048 
+  template: precise-base.qcow2
+  networks:
+  - name: default
+    ip: 192.168.122.13
+  - name: internal
+
+- name: compute2 
+  vcpus: 1
+  ram: 2048 
+  template: precise-base.qcow2
+  networks:
+  - name: default
+    ip: 192.168.122.14
+  - name: internal
