@@ -37,6 +37,7 @@
 
   - name: compute1 
     vcpus: 1
+    kvm_nested: True
     ram: 2048 
     template: precise-base.qcow2
     netdevs:
@@ -47,6 +48,7 @@
 
   - name: compute2 
     vcpus: 1
+    kvm_nested: True
     ram: 2048 
     template: precise-base.qcow2
     netdevs:

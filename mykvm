@@ -15,6 +15,7 @@ class VM(object):
     def __init__(self):
         self.name = ""
         self.vcpus = "1"
+        self.kvm_nested = False
         self.ram = "1024"
         self.template = "precise-base.qcow2"
         self.netdevs = []
@@ -30,6 +31,12 @@ class VM(object):
         
     def get_vcpus(self):
         return self.vcpus
+    
+    def set_kvm_nested(self, nested):
+        self.kvm_nested = nested
+        
+    def is_kvm_nested(self):
+        return self.kvm_nested
 
     def get_ram(self):
         return self.ram
@@ -193,8 +200,9 @@ class VirtInstallCommand(object):
         # nested kvm : 
         # modprobe -r kvm-intel && modprobe kvm-intel nested=1 && cat /sys/module/kvm_intel/parameters/nested
         # --cpu=host
-        cmd.append("--cpu")
-        cmd.append("core2duo,+vmx") 
+        if self.vm.is_kvm_nested():
+            cmd.append("--cpu")
+            cmd.append("core2duo,+vmx") 
         cmd.append("--vcpus")
         cmd.append(self.vm.get_vcpus())
         cmd.append("--ram")
@@ -427,12 +435,15 @@ def create_vm(vm_config, networks):
 
     name = vm_config.get('name')
     vcpus = vm_config.get('vcpus')
+    kvm_nested = vm_config.get('kvm_nested')
     ram = vm_config.get('ram')
     template = vm_config.get('template')
 
     vm.set_name(name)
     if vcpus:
         vm.set_vcpus(vcpus)
+    if kvm_nested:
+        vm.set_kvm_nested(True)
     if ram:
         vm.set_ram(ram)
     if template:
