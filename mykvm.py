@@ -10,26 +10,52 @@ BASE_IMAGES_PATH = os.getenv("HOME") + '/' + '.mykvm/base'
 MYKVM_CONFIG_PATH = os.getcwd() + '/' + '.mykvm'
 IMAGES_PATH = MYKVM_CONFIG_PATH + '/' + 'images'
 
-class VM(object):
+class Network(object):
 
     def __init__(self):
-        self.name = ""
-        self.vcpus = "1"
-        self.ram = "1024"
-        self.template = "precise-base.qcow2"
-        self.netdevs = []
+        self.name = "default"
+        self.ip  = ""
+        self.mac = ""
+
+    def get_name(self):
+        return self.name
 
     def set_name(self, name):
         self.name = name
-    
+
+    def get_ip(self):
+        return self.ip
+
+    def set_ip(self, ip):
+        self.ip = ip
+        self.mac = "52:54:00:00:00:" + self.ip.split('.')[-1]
+
+    def get_mac(self):
+        return self.mac
+
+    def __str__(self):
+        config = "network: "
+        config += ("name=%s "  % self.name)
+        config += ("mac=%s "   % self.mac)
+        if self.ip:
+            config += ("ip=%s" % self.ip)
+
+        return config
+
+class VM(object):
+
+    def __init__(self, name):
+        self.name = name
+        self.vcpus = "1"
+        self.ram = "1024"
+        self.template = "precise-base.qcow2"
+        self.networks = []
+
     def get_name(self):
         return self.name
 
     def set_vcpus(self, vcpus):
         self.vcpus = str(vcpus)
-        
-    def get_vcpus(self):
-        return self.vcpus
 
     def get_ram(self):
         return self.ram
@@ -43,11 +69,11 @@ class VM(object):
     def set_template(self, template):
         self.template = template
 
-    def get_netdevs(self):
-        return self.netdevs
+    def get_networks(self):
+        return self.networks
 
-    def add_netdev(self, netdev):
-        self.netdevs.append(netdev)
+    def add_network(self, network):
+        self.networks.append(network)
 
     def __str__(self):
         config = "vm: "
@@ -56,98 +82,9 @@ class VM(object):
         config += ("ram=%s "     % self.ram)
         config += ("template=%s" % self.template)
         
-        for netdev in self.netdevs:
-            config += "\n\t" + netdev.__str__()
+        for network in self.networks:
+            config += "\n\t" + network.__str__()
 
-        return config
-    
-class NetDev(object):
-
-    def __init__(self):
-        self.network = ""
-        self.ip  = ""
-        self.mac = ""
-        self.vm = None
-
-    def get_network(self):
-        return self.network
-
-    def set_network(self, network):
-        self.network = network
-
-    def get_ip(self):
-        return self.ip
-
-    def set_ip(self, ip):
-        self.ip = ip
-
-    def get_mac(self):
-        return self.mac
-    
-    def set_mac(self, mac):
-        self.mac = mac
-    
-    def set_vm(self, vm):
-        self.vm = vm
-        
-    def get_vm(self):
-        return self.vm
-
-    def __str__(self):
-        config = "netdev: "
-        config += ("network=%s "  % self.network)
-        config += ("mac=%s "   % self.mac)
-        if self.ip:
-            config += ("ip=%s" % self.ip)
-
-        return config
-    
-class Network(object):
-
-    def __init__(self):
-        self.name = ""
-        self.external  = False
-        self.autostart = False
-        self.ip = ""
-        self.netdevs = []
-
-    def get_name(self):
-        return self.name
-
-    def set_name(self, name):
-        self.name = name
-        
-    def set_external(self, external):
-        self.external= external
-        
-    def is_external(self):
-        return self.external
-        
-    def set_autostart(self, autostart):
-        self.autostart = autostart
-        
-    def is_autostart(self):
-        return self.autostart
-
-    def get_ip(self):
-        return self.ip
-
-    def set_ip(self, ip):
-        self.ip = ip
-        
-    def add_netdev(self, netdev):
-        self.netdevs.append(netdev)
-
-    def get_netdevs(self):
-        return self.netdevs
-
-    def __str__(self):
-        config = "network: "
-        config += ("name=%s "  % self.name)
-        config += ("external=%s "  % self.external)
-        config += ("autostart=%s " % self.autostart)
-        config += ("ip=%s" % self.ip)
-        
         return config
 
 class QemuImgCommand(object):
@@ -195,18 +132,16 @@ class VirtInstallCommand(object):
         # --cpu=host
         cmd.append("--cpu")
         cmd.append("core2duo,+vmx") 
-        cmd.append("--vcpus")
-        cmd.append(self.vm.get_vcpus())
         cmd.append("--ram")
         cmd.append(self.vm.get_ram())
         cmd.append("--disk")
         cmd.append(IMAGES_PATH + '/' + self.vm.get_name() + ".qcow2,format=qcow2")
-        for netdev in self.vm.get_netdevs():
+        for network in self.vm.get_networks():
             cmd.append("--network")
-            cmd.append("network=" + netdev.get_network())
-            if netdev.get_mac():
+            cmd.append("network=" + network.get_name())
+            if network.get_mac():
                 cmd.append("--mac")
-                cmd.append(netdev.get_mac()) 
+                cmd.append(network.get_mac()) 
         cmd.append("--graphics")
         cmd.append("vnc,listen=0.0.0.0")
         cmd.append("--noautoconsole")
@@ -255,65 +190,49 @@ class VirshStatusCommand(object):
 
         subprocess.call(cmd)
 
-class VirshNetCommand(object):
+class DnsmasqCommand(object):
 
-    NET_CONFIG_TEMPLATE = """
+    NET_CONFIG_FILE = MYKVM_CONFIG_PATH + '/' + 'default_net.xml'
+    DEFAULT_NET_CONFIG = """
 <network>
-  <name>%s</name>%s
-  <bridge network='virbr%s'/>
-  <mac address='52:54:00:4A:0F:%02d'/>
-  <ip address='%s' netmask='255.255.255.0'>
+  <name>default</name>
+  <uuid>14a108fe-9ae5-809a-aadb-12a828d1d602</uuid>
+  <forward mode='nat'/>
+  <bridge name='virbr0' stp='on' delay='0' />
+  <mac address='52:54:00:4A:0F:F1'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
     <dhcp>
-      <range start='%s.2' end='%s.253' />
-%s      
+      <range start='192.168.122.2' end='192.168.122.254' />
+{{ host_info }}      
     </dhcp>
   </ip>
 </network>
     """
 
-    def __init__(self, network, idx):
-        self.network = network
-        self.idx = idx
-        self.net_conf_file = MYKVM_CONFIG_PATH + '/' + 'net_' + network.get_name() + '.xml'
+    def __init__(self, vms):
+        self.vms = vms
 
-    def generate_net_config(self):                        
-        forward = ""
-        if self.network.is_external():
-            forward = "\n  <forward mode='nat'/>"
-            
-        subnet = '.'.join(self.network.get_ip().split('.')[0:3])
-        
+    def generate_net_config(self):
         hosts = []
-        for netdev in self.network.get_netdevs():
-            name = netdev.get_vm().get_name()
-            ip = netdev.get_ip()
-            mac = "52:54:00:00:%02d:%02d" % (self.idx, int(ip.split('.')[-1]))
-            netdev.set_mac(mac)
-            hosts.append("      <host mac='%s' network='%s' ip='%s' />" % (mac, name, ip))
+        for vm in self.vms:
+            name = vm.get_name()
+            network = vm.get_networks()[0]
+            ip = network.get_ip()
+            mac = network.get_mac()
+            hosts.append("      <host mac='%s' name='%s' ip='%s' />" % (mac, name, ip))
 
         host_info = "\n".join(hosts)
-        
-        net_conf = self.NET_CONFIG_TEMPLATE % (self.network.get_name(),
-                                               forward,
-                                               self.network.get_name(),
-                                               self.idx,
-                                               self.network.get_ip(),
-                                               subnet,
-                                               subnet,
-                                               host_info)
 
-        with open(self.net_conf_file, 'w') as f:
-            print >> f, net_conf
+        with open(self.NET_CONFIG_FILE, 'w') as f:
+            print >> f, self.DEFAULT_NET_CONFIG.replace('{{ host_info }}', host_info)
 
     def restart(self):
-        print bcolors.OKGREEN + '* restart network - ' + self.network.get_name() + bcolors.ENDC
-        
         cmd = []
 
         cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-destroy")
-        cmd.append(self.network.get_name())
+        cmd.append("default")
 
         subprocess.call(cmd)
         
@@ -321,7 +240,7 @@ class VirshNetCommand(object):
         cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-undefine")
-        cmd.append(self.network.get_name())
+        cmd.append("default")
 
         subprocess.call(cmd)
 
@@ -332,7 +251,7 @@ class VirshNetCommand(object):
         cmd.append("virsh")
         cmd.append("net-define")
         cmd.append("--file")
-        cmd.append(self.net_conf_file)
+        cmd.append(self.NET_CONFIG_FILE)
 
         subprocess.call(cmd)
 
@@ -340,7 +259,7 @@ class VirshNetCommand(object):
         cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-start")
-        cmd.append(self.network.get_name())
+        cmd.append("default")
 
         subprocess.call(cmd)
         
@@ -348,10 +267,9 @@ class VirshNetCommand(object):
         cmd.append("sudo")
         cmd.append("virsh")
         cmd.append("net-autostart")
-        cmd.append(self.network.get_name())
+        cmd.append("default")
 
-        if self.network.is_autostart():
-            subprocess.call(cmd)
+        subprocess.call(cmd)
         
 # http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
 class bcolors:
@@ -370,36 +288,30 @@ class bcolors:
         self.FAIL    = ''
         self.ENDC    = ''
 
-def create_netdev(netdev_config):
-    netdev = NetDev()
+def create_network(network_config):
+    network = Network()
     
-    network = netdev_config.get('network')
-    ip = netdev_config.get('ip')
-    mac = netdev_config.get('mac')
+    name = network_config.get('name')
+    ip = network_config.get('ip')
+    mac = network_config.get('mac')
     
-    if network:
-        netdev.set_network(network)
+    if name:
+        network.set_name(name)
     if ip:
-        netdev.set_ip(ip)
+        network.set_ip(ip)
     if mac:
-        netdev.set_mac(mac)
+        network.set_mac(mac)
 
-    return netdev
+    return network
 
 
-def create_vm(vm_config, networks):
-    networks_dict = {}
-    for network in networks:
-        networks_dict.update({network.get_name(): network})
-    
-    vm = VM()
+def create_vm(vm_config):
+    vm = VM(vm_config.get('name'))
 
-    name = vm_config.get('name')
     vcpus = vm_config.get('vcpus')
     ram = vm_config.get('ram')
     template = vm_config.get('template')
 
-    vm.set_name(name)
     if vcpus:
         vm.set_vcpus(vcpus)
     if ram:
@@ -407,39 +319,14 @@ def create_vm(vm_config, networks):
     if template:
         vm.set_template(template)
     
-    netdevs_config = vm_config.get('netdevs')
-    for netdev_config in netdevs_config:
-        netdev = create_netdev(netdev_config)		
-        netdev.set_vm(vm)
-        network = networks_dict.get(netdev.get_network())
-        if network:
-            vm.add_netdev(netdev)
-            network.add_netdev(netdev)
-        else:
-            print "no defined network with network : %s" % netdev.get_network()        
-        
+    networks_config = vm_config.get('networks')
+    for network_config in networks_config:		
+        vm.add_network(create_network(network_config))
+
     return vm
 
-def create_network(network_config):
-    network = Network()
-    
-    name = network_config.get("name")
-    external = network_config.get("external")
-    autostart = network_config.get("autostart")
-    ip = network_config.get("ip")
-    
-    network.set_name(name)
-    if external:
-        network.set_external(True)
-    if autostart:
-        network.set_autostart(True)
-    if ip:
-        network.set_ip(ip)
-    
-    return network
-    
 def usage():
-    print("Usage: mykvm command [<vm network>]")
+    print("Usage: mykvm command [<vm name>]")
     print("")
     print("Available subcommands:")
     print("    start")
@@ -463,20 +350,11 @@ def main():
         os.makedirs(IMAGES_PATH)
     
     vms = []
-    networks = []
     with open('mykvm.yml', 'r') as f:
-        configs = yaml.load(f)
-        
-        for config in configs:
-            networks_config = config.get("networks")
-            if networks_config:
-                for network_config in networks_config:
-                    networks.append(create_network(network_config))
-                    
-            vms_config = config.get("vms")
-            if vms_config:                
-                for vm_config in vms_config:
-                    vms.append(create_vm(vm_config, networks))
+        vms_config = yaml.load(f)
+    
+        for vm_config in vms_config:
+            vms.append(create_vm(vm_config))
     
     target_vms = []
     if len(sys.argv) > 2:
@@ -489,12 +367,9 @@ def main():
         target_vms = vms
     
     if command == 'start':
-        print bcolors.OKGREEN + 'restart network' + bcolors.ENDC + '\n'
-        idx = 1
-        for network in networks:
-            virshnet = VirshNetCommand(network, idx)
-            virshnet.restart()
-            idx += 1
+        print bcolors.OKGREEN + 'restart dnsmasq' + bcolors.ENDC
+        dnsmasq = DnsmasqCommand(vms)
+        dnsmasq.restart()
     
     if command == 'status':
         print bcolors.OKGREEN + 'status\n' + bcolors.ENDC

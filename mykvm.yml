@@ -1,37 +1,56 @@
 ---
-- name: controller 
-  vcpus: 1
-  ram: 2048 
-  template: precise-base.qcow2
-  networks:
-  - name: default
-    ip: 192.168.122.11
-  - name: external
+- networks:
+  - name: mgmt
+    external: true
+    autostart: true
+    ip: 10.0.10.1
 
-- name: network 
-  vcpus: 1
-  ram: 1024 
-  template: precise-base.qcow2
-  networks:
-  - name: default
-    ip: 192.168.122.12
-  - name: internal
-  - name: external 
+  - name: int
+    ip: 10.0.20.1
 
-- name: compute1 
-  vcpus: 1
-  ram: 2048 
-  template: precise-base.qcow2
-  networks:
-  - name: default
-    ip: 192.168.122.13
-  - name: internal
+  - name: ext
+    external: true
+    ip: 172.16.0.1
 
-- name: compute2 
-  vcpus: 1
-  ram: 2048 
-  template: precise-base.qcow2
-  networks:
-  - name: default
-    ip: 192.168.122.14
-  - name: internal
+- vms:
+  - name: controller 
+    vcpus: 1
+    ram: 2048 
+    template: precise-base.qcow2
+    netdevs:
+    - network: mgmt
+      ip: 10.0.10.10
+    - network: ext
+      ip: 172.16.0.10
+
+  - name: network 
+    vcpus: 1
+    ram: 1024 
+    template: precise-base.qcow2
+    netdevs:
+    - network: mgmt
+      ip: 10.0.10.11
+    - network: int
+      ip: 10.0.20.11
+    - network: ext
+      ip: 172.16.0.11 
+
+  - name: compute1 
+    vcpus: 1
+    ram: 2048 
+    template: precise-base.qcow2
+    netdevs:
+    - network: mgmt
+      ip: 10.0.10.12
+    - network: int
+      ip: 10.0.20.12
+
+  - name: compute2 
+    vcpus: 1
+    ram: 2048 
+    template: precise-base.qcow2
+    netdevs:
+    - network: mgmt
+      ip: 10.0.10.13
+    - network: int
+      ip: 10.0.20.13
