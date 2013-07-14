@@ -5,6 +5,7 @@ import yaml
 import os
 import subprocess
 import sys
+import time
 
 BASE_IMAGES_PATH = os.getenv("HOME") + '/' + '.mykvm/base'
 MYKVM_CONFIG_PATH = os.getcwd() + '/' + '.mykvm'
@@ -562,6 +563,36 @@ def main():
             virsh.undefine()
             qemu_img = QemuImgCommand(vm)
             qemu_img.destroy()
+            
+    if command == 'start':
+        print bcolors.OKGREEN + '\ninit VMs...' + bcolors.ENDC + '\n'
+        
+        os.chdir('./ansible')
+
+        cmd = []
+        cmd.append("ansible")
+        cmd.append("all")
+        cmd.append("-m")
+        cmd.append("ping")
+
+        print "wait for 10 seconds"
+        time.sleep(10)
+ 
+        for i in range(5):
+            retcode = subprocess.call(cmd)
+            if retcode == 0:
+                print "run ansible-playbook"
+                
+                cmd = []
+                cmd.append("ansible-playbook")
+                cmd.append("-v")
+                cmd.append("site.yml")
+                subprocess.call(cmd)
+                
+                break
+            
+            print "wait for 5 seconds [%d]" % i 
+            time.sleep(5)
 
 if __name__ == "__main__":
     try:

@@ -17,5 +17,5 @@
 
 - name: update apt archive mirror
   template: src=sources.list.j2 dest=/etc/apt/sources.list owner=root group=root mode=0644
-  notify:
-  - update apt cache
+#  notify:
+#  - update apt cache
