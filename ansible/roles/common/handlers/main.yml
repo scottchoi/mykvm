@@ -1,0 +1,12 @@
+---
+- name: update hostname
+  action: service name=hostname state=restarted
+
+- name: update timezone
+  action: command dpkg-reconfigure --frontend noninteractive tzdata
+
+- name: restart networking service
+  action: service name=networking state=restarted
+
+- name: update apt cache
+  action: shell apt-get update

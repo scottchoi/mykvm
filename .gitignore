@@ -2,3 +2,4 @@
 .mykvm
 .project
 .pydevproject
+ansible/ansible_hosts

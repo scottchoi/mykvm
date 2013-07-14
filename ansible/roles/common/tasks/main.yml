@@ -1,0 +1,21 @@
+---
+# This playbook contains common plays that will be run on all nodes.
+- name: set host name
+  template: src=hostname.j2 dest=/etc/hostname
+  notify:
+  - update hostname
+
+- name: modify timezone 
+  template: src=timezone.j2 dest=/etc/timezone
+  notify:
+  - update timezone
+
+- name: add multiple network interfaces 
+  template: src=interfaces.j2 dest=/etc/network/interfaces
+  notify:
+  - restart networking service
+
+- name: update apt archive mirror
+  template: src=sources.list.j2 dest=/etc/apt/sources.list owner=root group=root mode=0644
+  notify:
+  - update apt cache

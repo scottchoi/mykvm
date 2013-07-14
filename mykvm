@@ -532,12 +532,18 @@ def main():
     
     if command == 'start':
         print bcolors.OKGREEN + 'restart network' + bcolors.ENDC + '\n'
-        idx = 1
+        idx = 1        
         for network in networks:
             virshnet = VirshNetCommand(network, idx)
             virshnet.restart()
             idx += 1
-    
+            
+        ansible_hosts = []
+        for vm in vms:
+            ansible_hosts.append(vm.get_name())    
+        with open('ansible/ansible_hosts', 'w') as f:
+            print >> f, '\n'.join(ansible_hosts)
+        
     if command == 'status':
         print bcolors.OKGREEN + 'status\n' + bcolors.ENDC
         VirshStatusCommand().list()
