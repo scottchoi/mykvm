@@ -10,7 +10,7 @@
 
   - name: ext
     external: true
-    ip: 172.16.0.1
+    ip: 192.168.101.1
 
 - vms:
   - name: controller 
@@ -21,9 +21,9 @@
     - network: mgmt
       ip: 10.0.10.10
     - network: ext
-      ip: 172.16.0.10
+      ip: 192.168.101.10
 
-  - name: network 
+  - name: netnode 
     vcpus: 1
     ram: 1024 
     template: precise-base.qcow2
@@ -33,7 +33,7 @@
     - network: int
       ip: 10.0.20.11
     - network: ext
-      ip: 172.16.0.11 
+      ip: 192.168.101.11 
 
   - name: compute1 
     vcpus: 1
