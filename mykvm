@@ -2,7 +2,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 import yaml
-import os
+import os.path
 import subprocess
 import sys
 import time
@@ -231,6 +231,26 @@ class VirshCommand(object):
 
     def __init__(self, vm):
         self.vm = vm
+
+    def start(self):
+        cmd = []
+
+        cmd.append("sudo")
+        cmd.append("virsh")
+        cmd.append("start")
+        cmd.append(self.vm.get_name())
+
+        subprocess.call(cmd)
+        
+    def shutdown(self):
+        cmd = []
+
+        cmd.append("sudo")
+        cmd.append("virsh")
+        cmd.append("shutdown")
+        cmd.append(self.vm.get_name())
+
+        subprocess.call(cmd)
 
     def destroy(self):
         cmd = []
@@ -482,11 +502,12 @@ def create_network(network_config):
     return network
     
 def usage():
-    print("Usage: mykvm command [<vm network>]")
+    print("Usage: mykvm command [<vm name>]")
     print("")
     print("Available subcommands:")
-    print("    start")
-    print("    stop")
+    print("    up")
+    print("    halt")
+    print("    destroy")
     print("    status")
     print("")
     sys.exit(1)    
@@ -496,7 +517,7 @@ def main():
         usage()
 
     command = sys.argv[1]
-    if command not in ['start', 'stop', 'status']:
+    if command not in ['up', 'halt', 'destroy', 'status']:
         usage()
     
     if not os.path.exists(BASE_IMAGES_PATH):
@@ -531,7 +552,7 @@ def main():
     else:
         target_vms = vms
     
-    if command == 'start':
+    if command == 'up':
         print bcolors.OKGREEN + 'restart network' + bcolors.ENDC + '\n'
         idx = 1        
         for network in networks:
@@ -544,27 +565,37 @@ def main():
             ansible_hosts.append(vm.get_name())    
         with open('ansible/ansible_hosts', 'w') as f:
             print >> f, '\n'.join(ansible_hosts)
-        
-    if command == 'status':
-        print bcolors.OKGREEN + 'status\n' + bcolors.ENDC
-        VirshStatusCommand().list()
-    
+            
     for vm in target_vms:
-        if command == 'start':
+        if command == 'up':
             print bcolors.OKGREEN + 'start ' + vm.get_name() + bcolors.ENDC
-            qemu_img = QemuImgCommand(vm)
-            qemu_img.create()
-            virt_install = VirtInstallCommand(vm)
-            virt_install.execute()
-        if command == 'stop':
-            print bcolors.OKGREEN + 'stop ' + vm.get_name() + bcolors.ENDC
+            image = IMAGES_PATH + '/' + vm.get_name() + ".qcow2"
+            if os.path.isfile(image):
+                print "image file aleady exists : %s" % image
+                virsh = VirshCommand(vm)
+                virsh.start()
+            else:
+                qemu_img = QemuImgCommand(vm)
+                qemu_img.create()
+                virt_install = VirtInstallCommand(vm)
+                virt_install.execute()
+        if command == 'halt':
+            print bcolors.OKGREEN + 'shutdown ' + vm.get_name() + bcolors.ENDC
+            virsh = VirshCommand(vm)
+            virsh.shutdown()
+        if command == 'destroy':
+            print bcolors.OKGREEN + 'destroy ' + vm.get_name() + bcolors.ENDC
             virsh = VirshCommand(vm)
             virsh.destroy()
             virsh.undefine()
             qemu_img = QemuImgCommand(vm)
             qemu_img.destroy()
             
-    if command == 'start':
+    if command == 'status':
+        print bcolors.OKGREEN + 'status\n' + bcolors.ENDC
+        VirshStatusCommand().list()
+            
+    if command == 'up':
         print bcolors.OKGREEN + '\ninit VMs...' + bcolors.ENDC + '\n'
         
         os.chdir('./ansible')
