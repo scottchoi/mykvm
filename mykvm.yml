@@ -24,7 +24,7 @@
       ip: 192.168.101.10
 
   - name: netnode 
-    vcpus: 1
+    vcpus: 2
     ram: 1024 
     template: precise-base.qcow2
     netdevs:
@@ -36,7 +36,7 @@
       ip: 192.168.101.11 
 
   - name: compute1 
-    vcpus: 1
+    vcpus: 2
     kvm_nested: True
     ram: 2048 
     template: precise-base.qcow2
@@ -47,7 +47,7 @@
       ip: 10.0.20.12
 
   - name: compute2 
-    vcpus: 1
+    vcpus: 2
     kvm_nested: True
     ram: 2048 
     template: precise-base.qcow2
