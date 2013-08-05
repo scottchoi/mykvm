@@ -2,4 +2,7 @@
 .mykvm
 .project
 .pydevproject
+build/
+dist/
+mykvm.egg-info/
 ansible/ansible_hosts
