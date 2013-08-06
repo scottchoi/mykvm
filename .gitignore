@@ -5,4 +5,5 @@
 build/
 dist/
 mykvm.egg-info/
+ubuntu-kvm/
 ansible/ansible_hosts

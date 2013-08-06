@@ -148,9 +148,16 @@ def main():
             virshnet = VirshNetCommand(network, idx)
             virshnet.restart()
             idx += 1
+
+        base_image = BASE_IMAGES_PATH + '/' + "precise-base.qcow2"
+        if not os.path.isfile(base_image):
+            print bcolors.OKGREEN + 'build base image ' + base_image + bcolors.ENDC
+            cmd = []
+            cmd.append("script/vmbuilder.sh")
+            subprocess.call(cmd)
             
         ansible_hosts = []
-        for vm in vms:
+        for vm in target_vms:
             ansible_hosts.append(vm.get_name())    
         with open('ansible/ansible_hosts', 'w') as f:
             print >> f, '\n'.join(ansible_hosts)

@@ -43,7 +43,8 @@ class VirtInstallCommand(object):
         cmd.append("sudo")
         cmd.append("virt-install")
         cmd.append("--virt-type")
-        cmd.append("kvm")
+        cmd.append("kvm") 
+        # cmd.append("qemu") # virtualbox vm
         cmd.append("--name") 
         cmd.append(self.vm.get_name())
         # nested kvm : 

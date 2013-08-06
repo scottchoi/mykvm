@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
     name = "mykvm",
-    version = "0.1.0",
+    version = "0.2.0",
     packages = ['mykvm'],
-    install_requires = ['pyyaml>=3.10'],
+    install_requires = ['ansible>=1.2', 'pyyaml>=3.10'],
 
     # metadata for upload to PyPI
     author = "Scott Choi",
