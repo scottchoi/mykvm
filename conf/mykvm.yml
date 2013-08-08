@@ -16,7 +16,7 @@
   - name: controller 
     vcpus: 1
     ram: 2048 
-    template: precise-base.qcow2
+    template: precise64.qcow2
     netdevs:
     - network: mgmt
       ip: 10.0.10.10
@@ -26,7 +26,7 @@
   - name: netnode 
     vcpus: 2
     ram: 1024 
-    template: precise-base.qcow2
+    template: precise64.qcow2
     netdevs:
     - network: mgmt
       ip: 10.0.10.11
@@ -39,7 +39,7 @@
     vcpus: 2
     kvm_nested: True
     ram: 2048 
-    template: precise-base.qcow2
+    template: precise64.qcow2
     netdevs:
     - network: mgmt
       ip: 10.0.10.12
@@ -50,7 +50,7 @@
     vcpus: 2
     kvm_nested: True
     ram: 2048 
-    template: precise-base.qcow2
+    template: precise64.qcow2
     netdevs:
     - network: mgmt
       ip: 10.0.10.13

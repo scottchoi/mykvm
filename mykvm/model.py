@@ -5,7 +5,7 @@ class VM(object):
         self.vcpus = "1"
         self.kvm_nested = False
         self.ram = "1024"
-        self.template = "precise-base.qcow2"
+        self.template = "precise64.qcow2"
         self.netdevs = []
 
     def set_name(self, name):

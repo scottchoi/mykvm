@@ -15,9 +15,12 @@ from mykvm.util import bcolors
 
 import sys
 import os.path
+import stat
+import shutil
 import yaml
 import time
 import subprocess
+import pkg_resources
 
 def create_netdev(netdev_config):
     netdev = NetDev()
@@ -91,10 +94,11 @@ def create_network(network_config):
     return network
     
 def usage():
-    print("Usage: mykvm command [<vm name>]")
+    print("Usage: mykvm command [<args>]")
     print("")
     print("Available subcommands:")
-    print("    up")
+    print("    init")
+    print("    up [<vm>]")
     print("    halt")
     print("    destroy")
     print("    status")
@@ -106,8 +110,36 @@ def main():
         usage()
 
     command = sys.argv[1]
-    if command not in ['up', 'halt', 'destroy', 'status']:
+    if command not in ['init', 'up', 'halt', 'destroy', 'status']:
         usage()
+
+    if command == 'init':
+        print bcolors.OKGREEN + 'initialize mykvm' + bcolors.ENDC + '\n'
+
+        if not os.path.isfile('mykvm.yml'):
+            print bcolors.OKGREEN + '* create mykvm.yml' + bcolors.ENDC
+            with open('mykvm.yml', 'w') as f:
+                print >> f, pkg_resources.resource_string('mykvm', '../share/conf/mykvm.yml')
+        
+        if not os.path.exists('script'):
+            print bcolors.OKGREEN + '* copy vmbuilder script' + bcolors.ENDC
+            os.makedirs('script')
+            with open('script/vmbuilder.sh', 'w') as f:
+                print >> f, pkg_resources.resource_string('mykvm', '../share/script/vmbuilder.sh')
+                st = os.stat('script/vmbuilder.sh')
+                os.chmod('script/vmbuilder.sh', st.st_mode | stat.S_IEXEC)
+
+        if not os.path.exists('ansible'):
+            print bcolors.OKGREEN + '* copy ansible files' + bcolors.ENDC
+            src = pkg_resources.resource_filename('mykvm', '../share/ansible')
+            shutil.copytree(src, 'ansible')
+
+        base_image = BASE_IMAGES_PATH + '/' + "precise64.qcow2"
+        if not os.path.isfile(base_image):
+            print bcolors.OKGREEN + '* build base image ' + base_image + bcolors.ENDC
+            cmd = []
+            cmd.append("script/vmbuilder.sh")
+            subprocess.call(cmd)
     
     if not os.path.exists(BASE_IMAGES_PATH):
         os.makedirs(BASE_IMAGES_PATH)
@@ -115,6 +147,10 @@ def main():
     if not os.path.exists(IMAGES_PATH):
         os.makedirs(IMAGES_PATH)
     
+    if not os.path.isfile('mykvm.yml'):
+        print bcolors.OKGREEN + 'mykvm.yml does not exist' + bcolors.ENDC + '\n'
+        sys.exit(1)
+
     vms = []
     networks = []
     with open('mykvm.yml', 'r') as f:
@@ -140,7 +176,7 @@ def main():
                 break
     else:
         target_vms = vms
-    
+
     if command == 'up':
         print bcolors.OKGREEN + 'restart network' + bcolors.ENDC + '\n'
         idx = 1        
@@ -148,13 +184,6 @@ def main():
             virshnet = VirshNetCommand(network, idx)
             virshnet.restart()
             idx += 1
-
-        base_image = BASE_IMAGES_PATH + '/' + "precise-base.qcow2"
-        if not os.path.isfile(base_image):
-            print bcolors.OKGREEN + 'build base image ' + base_image + bcolors.ENDC
-            cmd = []
-            cmd.append("script/vmbuilder.sh")
-            subprocess.call(cmd)
             
         ansible_hosts = []
         for vm in target_vms:
