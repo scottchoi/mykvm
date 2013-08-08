@@ -119,19 +119,19 @@ def main():
         if not os.path.isfile('mykvm.yml'):
             print bcolors.OKGREEN + '* create mykvm.yml' + bcolors.ENDC
             with open('mykvm.yml', 'w') as f:
-                print >> f, pkg_resources.resource_string('mykvm', '../share/conf/mykvm.yml')
+                print >> f, pkg_resources.resource_string('mykvm', '../conf/mykvm.yml')
         
         if not os.path.exists('script'):
             print bcolors.OKGREEN + '* copy vmbuilder script' + bcolors.ENDC
             os.makedirs('script')
             with open('script/vmbuilder.sh', 'w') as f:
-                print >> f, pkg_resources.resource_string('mykvm', '../share/script/vmbuilder.sh')
+                print >> f, pkg_resources.resource_string('mykvm', '../script/vmbuilder.sh')
                 st = os.stat('script/vmbuilder.sh')
                 os.chmod('script/vmbuilder.sh', st.st_mode | stat.S_IEXEC)
 
         if not os.path.exists('ansible'):
             print bcolors.OKGREEN + '* copy ansible files' + bcolors.ENDC
-            src = pkg_resources.resource_filename('mykvm', '../share/ansible')
+            src = pkg_resources.resource_filename('mykvm', '../ansible')
             shutil.copytree(src, 'ansible')
 
         base_image = BASE_IMAGES_PATH + '/' + "precise64.qcow2"
