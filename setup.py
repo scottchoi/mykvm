@@ -6,7 +6,7 @@ files = [(x[0], map(lambda y: x[0]+'/'+y, x[2])) for x in os.walk('ansible')]
 
 setup(
     name = "mykvm",
-    version = "0.3.1",
+    version = "0.3.2",
     packages = ['mykvm'],
     install_requires = ['ansible>=1.2', 'pyyaml>=3.10'],
     data_files=[('conf', ['conf/mykvm.yml']), ('script', ['script/vmbuilder.sh'])] + files,
