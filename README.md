@@ -1,136 +1,156 @@
 mykvm
 =====
 
-mykvm is a small python script to create kvm instances from the yaml configuration file
+* mykvm is a small python script to create multiple kvm instances from the yaml configuration file. 
+* mykvm is using some nice tools like virt-install, vmbuilder, qemu-img and ansible.
 
-Perpare a Base Image
---------------------
+Installation
+------------
 
-* install kvm and virt-install
+* Install kvm, virt-install, vmbuilder and some packages for ansible. Ansible will be used to initialize kvm instances.
 
-<pre>
-$ sudo apt-get update
-$ sudo apt-get install kvm libvirt-bin virtinst
-</pre>
+        $ sudo apt-get update
+        $ sudo apt-get install kvm libvirt-bin virtinst	python-vm-builder python-dev python-pip
 
-* create a qcow2 image file 
+* If you don't have any ssh key, generate a new ssh key. This key will be used to ssh into the kvm instances.  
 
-```
-$ qemu-img create -f qcow2 precise-base.qcow2 10G
-```
+        $ ssh-keygen -t rsa
 
-* create a kvm instance and install ubuntu12.04 from iso. you can modify the base image after installation.
+* Install mykvm with pip
 
-```
-$ sudo virt-install --virt-type kvm --name precise-base --ram 1024 --cdrom ubuntu-12.04.2-server-amd64.iso --disk precise-base.qcow2,format=qcow2 --network network=default --graphics vnc,listen=0.0.0.0 --noautoconsole --os-type=linux --os-variant=ubuntuprecise
-```
+        $ sudo pip install mykvm
 
-* create a base directory and copy the base image
+* Now, mykvm is ready
 
-<pre>
-$ mkdir -p ~/.mykvm/base
-$ cp precise-base.qcow2 ~/.mykvm/base
-</pre>
+		$ mykvm 
+		Usage: mykvm command [<args>]
 
-Configure Local DNS
--------------------
+		Available subcommands:
+		    init
+		    up [<vm>]
+		    halt
+		    destroy
+		    status
 
-* add ip of virbr0 bridge as a nameserver
-
-<pre>
-$ sudo sh -c "echo 'nameserver 192.168.122.1' >> /etc/resolvconf/resolv.conf.d/head"
-$ sudo sh -c "echo 'nameserver 8.8.8.8' >> /etc/resolvconf/resolv.conf.d/head"
-</pre>
-
-* update resolv.conf
-
-```
-$ sudo resolvconf -u 
-```
-
-Using mykvm
+Usage
 ---------------
 
-* install git and python-yaml packages
+* Create a new directory
 
-```
-$ sudo apt-get install git python-yaml
-```
+		$ mkdir grizzly
+		$ cd grizzly
 
-* checkout mykvm
+* Run init command. If there's no base image, vmbuilder will create a precise64.qcow2 base image.
 
-<pre>
-$ git clone https://github.com/scottchoi/mykvm.git
-$ cd mykvm  
-</pre>
+		$ mykvm init
+		initialize mykvm
+		
+		* create mykvm.yml
+		* copy vmbuilder script
+		* copy ansible files
+		* build base image /home/cirros/.mykvm/base/precise64.qcow2
+		+ rm -rf ubuntu-kvm
+		+ SUDOERS_TMPL=/etc/vmbuilder/ubuntu/sudoers.tmpl
+		+ grep -q -e ubuntu /etc/vmbuilder/ubuntu/sudoers.tmpl
+		+ sudo sed -i '$a ubuntu ALL=(ALL) NOPASSWD:ALL\n#includedir /etc/sudoers.d' /etc/vmbuilder/ubuntu/sudoers.tmpl
+		+ sudo vmbuilder kvm ubuntu --suite precise --arch amd64 --flavour virtual --ssh-user-key /home/cirros/.ssh/id_rsa.pub ...
+		...
+		
+* Up command will start networks and kvm instances with configurations in mykvm.yml.
 
-* copy the mykvm script to PATH dirctory or add mykvm directory to PATH
+		$ mykvm up
+		
+* Check the status of kvm instances.
 
-```
-$ sudo cp mykvm /usr/local/bin
-``` 
+		$ mykvm status
+		status
+		
+		 Id Name                 State
+		----------------------------------
+		  1 controller           running
+		  2 netnode              running
+		  3 compute1             running
+		  4 compute2             running
+		  
+* You can use virsh to control kvm instances.
 
-* modify the mykvm.yml configuration file
+		$ sudo virsh list
+		 Id Name                 State
+		----------------------------------
+		  1 controller           running
+		  2 netnode              running
+		  3 compute1             running
+		  4 compute2             running
+		  
+* You can ssh into the kvm instances with hostname. /etc/resolv.conf is updated to use the dnsmasq of first network in mykvm.yml as a nameserver.
 
-<pre>
-$ cat mykvm.yml 
----
-- name: haproxy1
-  vcpus: 1
-  ram: 1024
-  template: precise-base.qcow2
-  networks:
-  - name: default
-    ip: 192.168.122.11
+		$ ssh ubuntu@controller
 
-- name: haproxy2
-  vcpus: 1
-  ram: 512
-  template: precise-base.qcow2
-  networks:
-  - name: default
-    ip: 192.168.122.12
-</pre>
+* Destroy command will stop networks and destroy kvm instances.
 
-* create and start vm instances 
+		$ mykvm destroy 
 
-```
-$ mykvm start
-```
+Configuration
+---------------
 
-* check the status of vm instances
+* mykvm.yml configuration file look like this. 
 
-<pre>
-$ mykvm status
-status
+* You can define multiple networks and vm instances with multiple network interfaces. 
 
- Id Name                 State
-----------------------------------
-  1 haproxy1             running
-  2 haproxy2             running
-</pre>
+* You can create nested kvm instances with 'kvm_nested' option.
 
-* you can ssh into the vm instances
+		$ cat mykvm.yml 
+		---
+		- networks:
+		  - name: mgmt
+		    external: true
+		    autostart: true
+		    ip: 10.0.10.1
+		
+		  - name: int
+		    ip: 10.0.20.1
+		
+		  - name: ext
+		    external: true
+		    ip: 192.168.101.1
+		
+		- vms:
+		  - name: controller 
+		    vcpus: 1
+		    ram: 2048 
+		    template: precise64.qcow2
+		    netdevs:
+		    - network: mgmt
+		      ip: 10.0.10.10
+		    - network: ext
+		      ip: 192.168.101.10
+		
+		  - name: netnode 
+		    vcpus: 2
+		    ram: 1024 
+		    template: precise64.qcow2
+		    netdevs:
+		    - network: mgmt
+		      ip: 10.0.10.11
+		    - network: int
+		      ip: 10.0.20.11
+		    - network: ext
+		      ip: 192.168.101.11 
+		      
+		  - name: compute1 
+		    vcpus: 2
+		    kvm_nested: True
+		    ram: 2048 
+		    template: precise64.qcow2
+		    netdevs:
+		    - network: mgmt
+		      ip: 10.0.10.12
+		    - network: int
+		      ip: 10.0.20.12
 
-```
-$ ssh ubuntu@haproxy1
-```
 
-* mykvm will create a xml configuration file for the default network and qcow2 image files
+Issues
+====================
 
-<pre>
-mykvm
-├── mykvm
-├── .mykvm
-│   ├── default_net.xml
-│   └── images
-│       ├── haproxy1.qcow2
-│       └── haproxy2.qcow2
-└── mykvm.yml
-</pre>
-
-* stop and delete vm instances
-
-```
-$ mykvm stop
-```
+* Only tested on Ubuntu 12.04 boxes with intel cpu.
+* Sometimes the base image generated by vmbuilder is not bootable. In that case, delete ubuntu-kvm directory and the base image under ~/.mykvm/base and run again init command to recreate a base image. 
