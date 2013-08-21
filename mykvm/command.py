@@ -178,7 +178,7 @@ nameserver 8.8.8.8
         for netdev in self.network.get_netdevs():
             name = netdev.get_vm().get_name()
             ip = netdev.get_ip()
-            mac = "52:54:00:00:%02d:%02d" % (self.idx, int(ip.split('.')[-1]))
+            mac = "52:54:00:00:%02X:%02X" % (self.idx, int(ip.split('.')[-1]))
             netdev.set_mac(mac)
             hosts.append("      <host mac='%s' name='%s' ip='%s' />" % (mac, name, ip))
 
@@ -188,7 +188,7 @@ nameserver 8.8.8.8
 <network>
   <name>%s</name>%s
   <bridge name='virbr%s'/>
-  <mac address='52:54:00:4A:0F:%02d'/>
+  <mac address='52:54:00:4A:0F:%02X'/>
   <ip address='%s' netmask='255.255.255.0'>
     <dhcp>
       <range start='%s.2' end='%s.253' />

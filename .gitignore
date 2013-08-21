@@ -1,4 +1,5 @@
 *~
+*.pyc
 .mykvm
 .project
 .pydevproject

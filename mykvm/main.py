@@ -1,3 +1,4 @@
+from mykvm import VERSION
 from mykvm import BASE_IMAGES_PATH
 from mykvm import IMAGES_PATH
 
@@ -94,6 +95,8 @@ def create_network(network_config):
     return network
     
 def usage():
+    print("mykvm " + VERSION)
+    print("")
     print("Usage: mykvm command [<args>]")
     print("")
     print("Available subcommands:")
