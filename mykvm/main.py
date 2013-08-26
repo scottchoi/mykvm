@@ -128,23 +128,23 @@ def main():
             st = os.stat('mykvm.yml')
             os.chmod('mykvm.yml', st.st_mode | stat.S_IWRITE)
 
-        if not os.path.exists('script'):
+        if not os.path.exists('.mykvm/script'):
             print bcolors.OKGREEN + '* copy vmbuilder script' + bcolors.ENDC
             src = install_data_dir + '/script'
-            shutil.copytree(src, 'script')
-            st = os.stat('script/vmbuilder.sh')
-            os.chmod('script/vmbuilder.sh', st.st_mode | stat.S_IEXEC)
+            shutil.copytree(src, '.mykvm/script')
+            st = os.stat('.mykvm/script/vmbuilder.sh')
+            os.chmod('.mykvm/script/vmbuilder.sh', st.st_mode | stat.S_IEXEC)
 
-        if not os.path.exists('ansible'):
+        if not os.path.exists('.mykvm/ansible'):
             print bcolors.OKGREEN + '* copy ansible files' + bcolors.ENDC
             src = install_data_dir + '/ansible'
-            shutil.copytree(src, 'ansible')
+            shutil.copytree(src, '.mykvm/ansible')
 
         base_image = BASE_IMAGES_PATH + '/' + "precise64.qcow2"
         if not os.path.isfile(base_image):
             print bcolors.OKGREEN + '* build base image ' + base_image + bcolors.ENDC
             cmd = []
-            cmd.append("script/vmbuilder.sh")
+            cmd.append(".mykvm/script/vmbuilder.sh")
             subprocess.call(cmd)
     
     if not os.path.exists(BASE_IMAGES_PATH):
@@ -194,7 +194,7 @@ def main():
         ansible_hosts = []
         for vm in target_vms:
             ansible_hosts.append(vm.get_name())    
-        with open('ansible/ansible_hosts', 'w') as f:
+        with open('.mykvm/ansible/ansible_hosts', 'w') as f:
             print >> f, '\n'.join(ansible_hosts)
             
     for vm in target_vms:
@@ -229,7 +229,7 @@ def main():
     if command == 'up':
         print bcolors.OKGREEN + '\ninit VMs...' + bcolors.ENDC + '\n'
         
-        os.chdir('./ansible')
+        os.chdir('.mykvm/ansible')
 
         cmd = []
         cmd.append("ansible")
