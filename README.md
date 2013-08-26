@@ -94,9 +94,7 @@ Configuration
 ---------------
 
 * mykvm.yml configuration file look like this. 
-
 * You can define multiple networks and vm instances with multiple network interfaces. 
-
 * You can create nested kvm instances with 'kvm_nested' option.
 
 		$ cat mykvm.yml 
