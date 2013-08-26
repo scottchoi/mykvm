@@ -148,6 +148,12 @@ Configuration
 		    - network: int
 		      ip: 10.0.20.12
 
+* Nested KVM Hypervisor Support
+
+		$ echo "options kvm-intel nested=1" | sudo tee /etc/modprobe.d/kvm-intel.conf
+		$ sudo reboot
+		$ cat /sys/module/kvm_intel/parameters/nested 
+		Y
 
 Issues
 ====================
