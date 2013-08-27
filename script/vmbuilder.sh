@@ -9,7 +9,8 @@ grep -q -e 'ubuntu' $SUDOERS_TMPL || sudo sed -i '$a ubuntu ALL=(ALL) NOPASSWD:A
 sudo vmbuilder kvm ubuntu --suite precise --arch amd64 --flavour server  \
                --timezone Asia/Seoul --ssh-user-key ~/.ssh/id_rsa.pub    \
                --mirror http://ftp.daum.net/ubuntu --addpkg=vim          \
-               --addpkg=openssh-server --addpkg=command-not-found
+               --addpkg=openssh-server --addpkg=command-not-found        \
+               --addpkg=iptables
 
 mkdir -p ~/.mykvm/base
 rm -f ~/.mykvm/base/precise64.qcow2
