@@ -11,7 +11,8 @@ sudo vmbuilder kvm ubuntu --suite precise --arch amd64 --flavour generic \
                --rootsize 20480                                          \
                --mirror http://ftp.daum.net/ubuntu --addpkg=vim          \
                --addpkg=openssh-server --addpkg=command-not-found        \
-               --addpkg=iptables --addpkg=apt-transport-https
+               --addpkg=iptables --addpkg=apt-transport-https            \
+               --addpkg=acpid
 
 mkdir -p ~/.mykvm/base
 rm -f ~/.mykvm/base/precise64.qcow2
