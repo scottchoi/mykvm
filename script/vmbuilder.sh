@@ -10,7 +10,7 @@ sudo vmbuilder kvm ubuntu --suite precise --arch amd64 --flavour server  \
                --timezone Asia/Seoul --ssh-user-key ~/.ssh/id_rsa.pub    \
                --mirror http://ftp.daum.net/ubuntu --addpkg=vim          \
                --addpkg=openssh-server --addpkg=command-not-found        \
-               --addpkg=iptables
+               --addpkg=iptables --addpkg=apt-transport-https
 
 mkdir -p ~/.mykvm/base
 rm -f ~/.mykvm/base/precise64.qcow2
