@@ -8,6 +8,7 @@ grep -q -e 'ubuntu' $SUDOERS_TMPL || sudo sed -i '$a ubuntu ALL=(ALL) NOPASSWD:A
 # flavour : virtual, server, generic
 sudo vmbuilder kvm ubuntu --suite precise --arch amd64 --flavour generic \
                --timezone Asia/Seoul --ssh-user-key ~/.ssh/id_rsa.pub    \
+               --rootsize 20480                                          \
                --mirror http://ftp.daum.net/ubuntu --addpkg=vim          \
                --addpkg=openssh-server --addpkg=command-not-found        \
                --addpkg=iptables --addpkg=apt-transport-https
